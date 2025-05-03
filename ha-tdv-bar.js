@@ -91,13 +91,15 @@ class TDVBarCard extends HTMLElement
             m:"",
             e:a[i].entity,
             i:a[i].icon,
-            d:0,h:null,
+            d:0,
+            h:null,
             st:a[i].state??null,
             bar_fg:a[i].barcolor??this.colors.bar_fg,
             pr:a[i].precision??0,
             inv:a[i].invert??false,
             max:a[i].max??this.maxpos_default,
-            max_raw:null
+            max_raw:null,
+            e_sec: a[i].secondary??{entity:null,d:0,m:"",pr:a[i].precision??0}
           };
 
           // Convert range value to log10 scale
@@ -110,6 +112,8 @@ class TDVBarCard extends HTMLElement
             } 
 
           if(this._hass.entities[bdata.e]) bdata.pr=this._hass.entities[bdata.e].display_precision??bdata.pr;
+
+          if(bdata.e_sec.entity != null && this._hass.entities[bdata.e_sec.entity]) bdata.e_sec.pr=this._hass.entities[bdata.e_sec.entity].display_precision??bdata.e_sec.pr;
 
           if(!bdata.ut&&this._hass.entities[a[i]?.entity]?.device_id)
            {
@@ -305,6 +309,8 @@ class TDVBarCard extends HTMLElement
     for(let i in this.barData)
      {
       let old_d=this.barData[i].d;
+
+      // Primary Value
       if(hass.states[this.barData[i].e])
        {
         //TODO: Refresh precision data
@@ -328,6 +334,25 @@ class TDVBarCard extends HTMLElement
         this.barData[i].t="";
         this.barData[i].m="";
        }
+
+      // Secondary value
+      if(this.barData[i].e_sec.entity != null)
+      {
+        if(hass.states[this.barData[i].e_sec.entity])
+        {
+          if(this.barData[i].e_sec.invert??false)
+          {
+            this.barData[i].e_sec.d = +hass.states[this.barData[i].e_sec.entity].state * -1;
+          }
+          else
+          {
+            this.barData[i].e_sec.d = +hass.states[this.barData[i].e_sec.entity].state;
+          }
+
+          this.barData[i].e_sec.m=hass.states[this.barData[i].e_sec.entity].attributes.unit_of_measurement;
+        }
+      }
+
       if(this.animation>0&&old_d!=this.barData[i].d&&this.barData[i].ap==null) {this.barData[i].ap=0;ischanged=true;}
 
       let icon=this.querySelector(`#tdvbar_${i}`);
@@ -758,6 +783,13 @@ class TDVBarCard extends HTMLElement
      {
       // Form a string with the current value
       let curvalstr=Number(entity.d.toFixed(entity.pr))+" "+entity.m;
+      
+      // Append the secondary value if it exists
+      if(Number(entity.e_sec.d) != 0)
+      {
+        curvalstr += Number(entity.e_sec.d.toFixed(entity.e_sec.pr)) + " " + entity.e_sec.m;
+      }
+
       valstrwidth=this.ctx.measureText(curvalstr).width;
       this.ctx.fillStyle=this.colors.name;
       this.ctx.textAlign="end"; 
