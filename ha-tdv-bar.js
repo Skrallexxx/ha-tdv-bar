@@ -98,6 +98,7 @@ class TDVBarCard extends HTMLElement
             bar_fg:a[i].barcolor??this.colors.bar_fg,
             pr:a[i].precision??0,
             inv:a[i].invert??false,
+            min:a[i].min??-this.maxpos_default,
             max:a[i].max??this.maxpos_default,
             max_raw:null,
             allow_neg:a[i].allownegativescale??this.allownegativescale_default,
@@ -335,6 +336,9 @@ class TDVBarCard extends HTMLElement
         {
           this.barData[i].d=+hass.states[this.barData[i].e].state;
         }
+
+        if(this.barData[i].d < this.barData[i].min) this.barData[i].d = this.barData[i].min; // Clamp to minimum
+        
         this.barData[i].t=this.barData[i].ut??(hass.states[this.barData[i].e].attributes.friendly_name??hass.states[this.barData[i].e].entity_id);
         this.barData[i].m=hass.states[this.barData[i].e].attributes.unit_of_measurement;
        }
