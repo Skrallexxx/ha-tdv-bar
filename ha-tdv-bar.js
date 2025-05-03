@@ -1,4 +1,4 @@
-console.info("%c v1.2.3 %c TDV-BAR-CARD ", "color: #000000; background:#ffa600 ; font-weight: 700;", "color: #000000; background: #03a9f4; font-weight: 700;");
+console.info("%c v0.0.1 %c TDV-BAR-CARD ", "color: #000000; background:#ffa600 ; font-weight: 700;", "color: #000000; background: #03a9f4; font-weight: 700;");
 
 //const LitElement = customElements.get("ha-panel-lovelace") ? Object.getPrototypeOf(customElements.get("ha-panel-lovelace")) : Object.getPrototypeOf(customElements.get("hc-lovelace"));
 //const html = LitElement.prototype.html;
@@ -80,8 +80,21 @@ class TDVBarCard extends HTMLElement
 
         let a=Array.isArray(this.config.entities)?this.config.entities:[this.config.entities];
         for(let i in a) 
-         {
-          let bdata={ap:null,fl:false,ut:a[i].name??"",t:"",m:"",e:a[i].entity,i:a[i].icon,d:0,h:null,st:a[i].state??null,bar_fg:a[i].barcolor??this.colors.bar_fg,pr:0};
+        {
+          let bdata={
+            ap:null,
+            fl:false,
+            ut:a[i].name??"",
+            t:"",
+            m:"",
+            e:a[i].entity,
+            i:a[i].icon,
+            d:0,h:null,
+            st:a[i].state??null,
+            bar_fg:a[i].barcolor??this.colors.bar_fg,
+            pr:a[i].precision??0,
+            inv:a[i].invert??false
+          };
 
           if(this._hass.entities[bdata.e]) bdata.pr=this._hass.entities[bdata.e].display_precision??bdata.pr;
 
@@ -293,8 +306,15 @@ class TDVBarCard extends HTMLElement
         //TODO: Refresh precision data
 
 //DEBUG
-//if(i==0) this.barData[i].d=hass.states[this.barData[i].e].state*-1; else 
-        this.barData[i].d=+hass.states[this.barData[i].e].state;
+//if(i==0) this.barData[i].d=hass.states[this.barData[i].e].state*-1; else
+        if(this.barData[i].inv)
+        {
+          this.barData[i].d=+hass.states[this.barData[i].e].state * -1;
+        }
+        else
+        {
+          this.barData[i].d=+hass.states[this.barData[i].e].state;
+        }
         this.barData[i].t=this.barData[i].ut??(hass.states[this.barData[i].e].attributes.friendly_name??hass.states[this.barData[i].e].entity_id);
         this.barData[i].m=hass.states[this.barData[i].e].attributes.unit_of_measurement;
        }
@@ -1091,5 +1111,5 @@ window.customCards.push({
   name: "TDV Bar",
   preview: true, // Optional - defaults to false
   description: "Bar chart oriented to display power sensors", // Optional
-  documentationURL: "https://github.com/tdvtdv/ha-tdv-bar"
+  documentationURL: "https://github.com/Skrallexxx/ha-tdv-bar"
 });
