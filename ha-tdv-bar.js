@@ -105,8 +105,8 @@ class TDVBarCard extends HTMLElement
               m: "",
               pr: a[i].secondary?.precision??0,
               inv: a[i].secondary?.invert??false,
-              pref: a[i].secondary?.prefix??" / ",
-              suff: a[i].secondary?.suffix??""
+              pref: a[i].secondary?.prefix??" (",
+              suff: a[i].secondary?.suffix??")"
             }
           };
 
