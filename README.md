@@ -31,7 +31,7 @@ HACS is a third party community store and is not included in Home Assistant out 
 | type               | string  | **Required** |                     | `custom:tdv-bar-card`
 | title              | string  | **Optional** |                     | Optional header title for the card
 | height             | number  | **Optional** |                     | The height of the card in pixels
-| rangemax           | number  | **Optional** | 2000                | Maximum bar scale range
+| default_max        | number  | **Optional** | 2000                | Default maximum bar scale range
 | histmode           | number  | **Optional** | 1                   | Historical chart display mode<br>0-hide<br>1-show (this can be automatically overridden if the width of the widget is insufficient)
 | animation          | number  | **Optional** | 1                   | Bar chart animation<br>0-disable<br>1-enable
 | allownegativescale | number  | **Optional** | 0                   | Show and allow the use of negative scale<br>0-disable<br>1-enable
@@ -63,6 +63,9 @@ HACS is a third party community store and is not included in Home Assistant out 
 | name              | string  | **Optional** | Custom label for this entity
 | state             | string  | **Optional** | Change state entity id (e.g. switch)
 | barcolor          | string  | **Optional** | Individual bar color
+| invert            | number  | **Optional** | Invert sensor values for display
+| precision         | number  | **Optional** | Set precision fallback precision (decimal places) for entity (if entity precision is not used)
+| max               | number  | **Optional** | Set the maximum bar scale range for the entity
 
 
 ![Video example](img/vid.gif)
