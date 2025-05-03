@@ -103,7 +103,8 @@ class TDVBarCard extends HTMLElement
               entity: a[i].secondary?.entity??null,
               d: 0,
               m: "",
-              pr: a[i].secondary?.precision??0
+              pr: a[i].secondary?.precision??0,
+              inv: a[i].secondary?.invert??false
             }
           };
 
@@ -792,7 +793,7 @@ class TDVBarCard extends HTMLElement
       // Append the secondary value if it exists
       if(Number(entity.e_sec.d) != 0)
       {
-        curvalstr += Number(entity.e_sec.d.toFixed(entity.e_sec.pr)) + " " + entity.e_sec.m;
+        curvalstr += " / " + Number(entity.e_sec.d.toFixed(entity.e_sec.pr)) + " " + entity.e_sec.m;
       }
 
       valstrwidth=this.ctx.measureText(curvalstr).width;
