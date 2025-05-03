@@ -377,7 +377,7 @@ class TDVBarCard extends HTMLElement
           // If inverted, use the maximum value (and then invert it)
           if(this.barData[BarIdx].inv)
           {
-            data=data=this.barData[BarIdx].h[HistIdx]?.mx * -1;
+            data=this.barData[BarIdx].h[HistIdx]?.mx * -1;
           }
           else if(this.allownegativescale&&this.barData[BarIdx].h[HistIdx]?.v<0) data=this.barData[BarIdx].h[HistIdx]?.mx;
           else data=this.barData[BarIdx].h[HistIdx]?.mn;
@@ -387,7 +387,7 @@ class TDVBarCard extends HTMLElement
         {
           if(this.barData[BarIdx].inv)
           {
-              data=data=this.barData[BarIdx].h[HistIdx]?.v * -1;
+              data=this.barData[BarIdx].h[HistIdx]?.v * -1;
           }
           else
           {
@@ -426,7 +426,7 @@ class TDVBarCard extends HTMLElement
     return event;
    }
 //#################################################################################################
-  _BuildDataArray(RawData,Start,Finish)
+  _BuildDataArray(RawData,Start,Finish, Invert)
    {
     let GetPosFunc=(a,i)=>{return Math.trunc(new Date(a[i].last_changed).getTime()/this._scale);}
     let rawmax=GetPosFunc(RawData,RawData.length-1);
@@ -449,7 +449,18 @@ class TDVBarCard extends HTMLElement
            {
 //DEBUG
 //            if(isNaN(RawData[r].state)) last=null; else last=(+RawData[r].state)*-1;
-            if(isNaN(RawData[r].state)) last=null; else last=+RawData[r].state;
+            if(isNaN(RawData[r].state)) last=null; 
+            else
+            {
+              if(Invert)
+              {
+                last=+RawData[r].state * -1;
+              }
+              else
+              {
+                last=+RawData[r].state;
+              }
+            } 
             if(last!=null) 
              {
               if(valavg!=null) valavg+=last; else valavg=last;
@@ -505,7 +516,7 @@ class TDVBarCard extends HTMLElement
     let data_raw=await This._fetchRecent(This.barData[baridx].e,This.ReqStart,This.ReqEnd,false,false);
     if(data_raw&&data_raw.length&&data_raw[0]&&data_raw[0].length)
      {
-      let da=This._BuildDataArray(data_raw[0],This.StartMoment,This.CurMoment);
+      let da=This._BuildDataArray(data_raw[0],This.StartMoment,This.CurMoment, This.barData[baridx].inv);
       This.barData[baridx].h=da.data;
       This.barData[baridx].isempty=!da.isactive;
      }
