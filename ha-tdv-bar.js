@@ -76,6 +76,7 @@ class TDVBarCard extends HTMLElement
       // Default config options
       this.maxpos_default=this.config.default_max>0?this.config.default_max:2000; 
       this.allownegativescale_default=Number(this.config.allownegativescale_default??0); //0-disable 1-enable
+      this.trackingvalue_default=this.config.trackingvalue??"max";               //min, avg, max
 
       if(this.config.entities)
        {
@@ -92,19 +93,20 @@ class TDVBarCard extends HTMLElement
             m:"",
             e:a[i].entity,
             i:a[i].icon,
-            d:0,
+            d:undefined,
             h:null,
             st:a[i].state??null,
             bar_fg:a[i].barcolor??this.colors.bar_fg,
             pr:a[i].precision??0,
             inv:a[i].invert??false,
+            trkval:a[i].trackingvalue??this.trackingvalue_default,
             min:a[i].min??-this.maxpos_default,
             max:a[i].max??this.maxpos_default,
             max_raw:null,
             allow_neg:a[i].allownegativescale??this.allownegativescale_default,
             e_sec: {
               entity: a[i].secondary?.entity??null,
-              d: 0,
+              d: undefined,
               m: "",
               pr: a[i].secondary?.precision??0,
               inv: a[i].secondary?.invert??false,
@@ -169,7 +171,6 @@ class TDVBarCard extends HTMLElement
       this.cfghistmode=this.config.histmode??1;                          //0-hide 1-normal
       this.histmode=this.cfghistmode;                                    //!!! This variable can be overwritten if the width of the widget is insufficient
       this.trackingmode=Number(this.config.trackingmode??1);             //0-disable 1-bar only 2-history 3-bar and history 4-all bars and history  
-      this.trackingvalue=this.config.trackingvalue??"max";               //min, avg, max
       this.animation=Number(this.config.animation??1);                   //0-disable 1-enable
       // this.allownegativescale=Number(this.config.allownegativescale??0); //0-disable 1-enable
 
@@ -338,7 +339,7 @@ class TDVBarCard extends HTMLElement
         }
 
         if(this.barData[i].d < this.barData[i].min) this.barData[i].d = this.barData[i].min; // Clamp to minimum
-        
+
         this.barData[i].t=this.barData[i].ut??(hass.states[this.barData[i].e].attributes.friendly_name??hass.states[this.barData[i].e].entity_id);
         this.barData[i].m=hass.states[this.barData[i].e].attributes.unit_of_measurement;
        }
@@ -374,7 +375,7 @@ class TDVBarCard extends HTMLElement
        {
         let ison=false;
         if(this.barData[i].st&&hass.states[this.barData[i].st]) ison=(hass.states[this.barData[i].st].state=="on");
-        else ison=(this.barData[i].d!=0);//if on/off entity state is not defined the use base state
+        else ison=(this.barData[i].d!=undefined);//if on/off entity state is not defined the use base state
         icon.style.color=ison?this.colors.iconon:this.colors.iconoff;
        }
      } 
@@ -413,7 +414,7 @@ class TDVBarCard extends HTMLElement
     let data;
     if(BarIdx>=0&&BarIdx<this.barData.length&&this.barData[BarIdx]&&this.barData[BarIdx].h)
      {
-      switch(this.trackingvalue)
+      switch(this.barData[BarIdx].trkval)
        {
         case "min":
          {
@@ -793,13 +794,13 @@ class TDVBarCard extends HTMLElement
     // Value
     let valstrwidth=0;
     let tvalstrwidth=0;
-    if(Number(entity.d)!=0)
+    if(entity.d != undefined)
      {
       // Form a string with the current value
       let curvalstr=Number(entity.d.toFixed(entity.pr))+" "+entity.m;
       
       // Append the secondary value if it exists
-      if(Number(entity.e_sec.d) != 0)
+      if(entity.e_sec.d != undefined)
       {
         curvalstr += entity.e_sec.pref + Number(entity.e_sec.d.toFixed(entity.e_sec.pr)) + " " + entity.e_sec.m + entity.e_sec.suff;
       }
@@ -824,14 +825,14 @@ class TDVBarCard extends HTMLElement
      {
       let curvalstr="";
 
-      if(entity.allow_neg&&trval<0) switch(this.trackingvalue)
+      if(entity.allow_neg&&trval<0) switch(entity.trkval)
        {
         case "min": curvalstr="⇑ ";break;
         case "avg": curvalstr="~ ";break;
         case "max":
         default:    curvalstr="⇓ ";break;
        }  
-      else switch(this.trackingvalue)
+      else switch(entity.trkval)
        {
         case "min": curvalstr="⇓ ";break;
         case "avg": curvalstr="~ ";break;
