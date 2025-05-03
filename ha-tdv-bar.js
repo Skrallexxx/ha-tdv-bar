@@ -346,7 +346,7 @@ class TDVBarCard extends HTMLElement
       {
         if(hass.states[this.barData[i].e_sec.entity])
         {
-          if(this.barData[i].e_sec.invert??false)
+          if(this.barData[i].e_sec.inv??false)
           {
             this.barData[i].e_sec.d = +hass.states[this.barData[i].e_sec.entity].state * -1;
           }
