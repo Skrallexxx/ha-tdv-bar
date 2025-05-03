@@ -73,6 +73,8 @@ class TDVBarCard extends HTMLElement
 
        }
 
+      // Range
+      this.maxpos_default=this.config.default_max>0?this.config.default_max:2000; 
 
       if(this.config.entities)
        {
@@ -155,8 +157,7 @@ class TDVBarCard extends HTMLElement
       this.trackingvalue=this.config.trackingvalue??"max";               //min, avg, max
       this.animation=Number(this.config.animation??1);                   //0-disable 1-enable
       this.allownegativescale=Number(this.config.allownegativescale??0); //0-disable 1-enable
-      // Range
-      this.maxpos_default=this.config.default_max>0?this.config.default_max:2000; 
+
       //-------------------------------------------------------------------------------------------
       // Create card content
       let cnthtml=`<ha-card header="${this.config.title??''}" style="line-height:0;"><div style="position:relative;">`
