@@ -93,8 +93,19 @@ class TDVBarCard extends HTMLElement
             st:a[i].state??null,
             bar_fg:a[i].barcolor??this.colors.bar_fg,
             pr:a[i].precision??0,
-            inv:a[i].invert??false
+            inv:a[i].invert??false,
+            max:a[i].max??this.maxpos_default,
+            max_raw:null
           };
+
+          // Convert range value to log10 scale
+          bdata.max_raw=bdata.max;
+
+          switch(this.config.scaletype?this.config.scaletype.toLowerCase():"log10")
+            {
+            case "linear": break;
+            case "log10": bdata.max=Math.log10(bdata.max);break;
+            } 
 
           if(this._hass.entities[bdata.e]) bdata.pr=this._hass.entities[bdata.e].display_precision??bdata.pr;
 
@@ -145,15 +156,7 @@ class TDVBarCard extends HTMLElement
       this.animation=Number(this.config.animation??1);                   //0-disable 1-enable
       this.allownegativescale=Number(this.config.allownegativescale??0); //0-disable 1-enable
       // Range
-      this.maxpos=this.config.rangemax>0?this.config.rangemax:2000; 
-      // Convert range value to log10 scale
-      this.maxposraw=this.maxpos;
-
-      switch(this.config.scaletype?this.config.scaletype.toLowerCase():"log10")
-       {
-        case "linear": break;
-        case "log10": this.maxpos=Math.log10(this.maxpos);break;
-       } 
+      this.maxpos_default=this.config.default_max>0?this.config.default_max:2000; 
       //-------------------------------------------------------------------------------------------
       // Create card content
       let cnthtml=`<ha-card header="${this.config.title??''}" style="line-height:0;"><div style="position:relative;">`
@@ -534,9 +537,9 @@ class TDVBarCard extends HTMLElement
      return failstr;
    }
 //#################################################################################################
-  _getPos(v,width)
+  _getPos(v,width,entity)
    {
-    let pc=this.maxpos/width;
+    let pc=entity.max/width;
     switch(this.config.scaletype?this.config.scaletype.toLowerCase():"log10")
      {
       case "linear":
@@ -662,7 +665,7 @@ class TDVBarCard extends HTMLElement
       let zeroposbaroffset;
       if(this.allownegativescale) zeroposbaroffset=Math.round((width-bar_x-1)/2); else zeroposbaroffset=0;
 
-      let dp=this._getPos(Math.abs(entity.d),(width-bar_x-1)-zeroposbaroffset);
+      let dp=this._getPos(Math.abs(entity.d),(width-bar_x-1)-zeroposbaroffset, entity);
       if(dp>4) 
        {
         let bpx;
@@ -698,10 +701,10 @@ class TDVBarCard extends HTMLElement
         // Bar grid
         this.ctx.strokeStyle=this.colors.bar_grid;
         this.ctx.beginPath();
-        let gridstep=this.maxposraw/10;
-        for(let s=gridstep;s<this.maxposraw;s+=gridstep)
+        let gridstep=entity.max_raw/10;
+        for(let s=gridstep;s<entity.max_raw;s+=gridstep)
          {
-          let a=this._getPos(s,(width-bar_x)-zeroposbaroffset);
+          let a=this._getPos(s,(width-bar_x)-zeroposbaroffset, entity);
           if(a<(dp-2))
            { 
             if(entity.d>0)
@@ -820,12 +823,12 @@ class TDVBarCard extends HTMLElement
     if(entity.d>0)
      {
       this.ctx.fillStyle=entity.bar_fg;//?entity.bar_fg:this.colors.bar_fg;
-      this._roundRect(bar_x+.5+zeroposbaroffset,y+bar_yoffset+.5,this._getPos(entity.d,width-bar_x-1-zeroposbaroffset),height-bar_yoffset-.5,3,true,true);
+      this._roundRect(bar_x+.5+zeroposbaroffset,y+bar_yoffset+.5,this._getPos(entity.d,width-bar_x-1-zeroposbaroffset, entity),height-bar_yoffset-.5,3,true,true);
      }
     else if(entity.d<0&&this.allownegativescale)
      {
       this.ctx.fillStyle=entity.bar_fg;//?entity.bar_fg:this.colors.bar_fg;
-      let w=this._getPos(Math.abs(entity.d),width-bar_x-1-zeroposbaroffset);
+      let w=this._getPos(Math.abs(entity.d),width-bar_x-1-zeroposbaroffset, entity);
       this._roundRect((bar_x+.5+zeroposbaroffset)-w,y+bar_yoffset+.5,w,height-bar_yoffset-.5,3,true,true);
      }
 
@@ -834,10 +837,10 @@ class TDVBarCard extends HTMLElement
      {
       this.ctx.fillStyle=this.colors.bar_tracker;
       if(this._tracker.data>0) 
-        this._roundRect(bar_x+.5+zeroposbaroffset,y+bar_yoffset+.5,this._getPos(this._tracker.data,width-bar_x-1-zeroposbaroffset),height-bar_yoffset-.5,3,true,true);
+        this._roundRect(bar_x+.5+zeroposbaroffset,y+bar_yoffset+.5,this._getPos(this._tracker.data,width-bar_x-1-zeroposbaroffset, entity),height-bar_yoffset-.5,3,true,true);
       else if(this._tracker.data<0&&this.allownegativescale)
        { 
-        let tbw=this._getPos(Math.abs(this._tracker.data),width-bar_x-1-zeroposbaroffset);
+        let tbw=this._getPos(Math.abs(this._tracker.data),width-bar_x-1-zeroposbaroffset, entity);
         this._roundRect(bar_x+.5+zeroposbaroffset-tbw,y+bar_yoffset+.5,tbw,height-bar_yoffset-.5,3,true,true);
        }
      }
@@ -847,10 +850,10 @@ class TDVBarCard extends HTMLElement
       if(d!=null&&d!=0)
        {
         this.ctx.fillStyle=this.colors.bar_tracker;
-        if(d>0) this._roundRect(bar_x+.5+zeroposbaroffset,y+bar_yoffset+.5,this._getPos(d,width-bar_x-1-zeroposbaroffset),height-bar_yoffset-.5,3,true,true);
+        if(d>0) this._roundRect(bar_x+.5+zeroposbaroffset,y+bar_yoffset+.5,this._getPos(d,width-bar_x-1-zeroposbaroffset, entity),height-bar_yoffset-.5,3,true,true);
         else if(d<0&&this.allownegativescale)
          {
-          let tbw=this._getPos(Math.abs(d),width-bar_x-1-zeroposbaroffset)
+          let tbw=this._getPos(Math.abs(d),width-bar_x-1-zeroposbaroffset, entity)
           this._roundRect(bar_x+.5+zeroposbaroffset-tbw,y+bar_yoffset+.5,tbw,height-bar_yoffset-.5,3,true,true);
          }
        }
@@ -866,10 +869,10 @@ class TDVBarCard extends HTMLElement
       this.ctx.moveTo(bar_x+zeroposbaroffset,y+bar_yoffset+1);
       this.ctx.lineTo(bar_x+zeroposbaroffset,y+height);
      }
-    let gridstep=this.maxposraw/10;
-    for(let s=gridstep;s<this.maxposraw;s+=gridstep)
+    let gridstep=entity.max_raw/10;
+    for(let s=gridstep;s<entity.max_raw;s+=gridstep)
      {
-      let a=this._getPos(s,width-bar_x-zeroposbaroffset);
+      let a=this._getPos(s,width-bar_x-zeroposbaroffset, entity);
       // Draw positive scale grid 
       this.ctx.moveTo(bar_x+zeroposbaroffset+a,y+bar_yoffset+1);
       this.ctx.lineTo(bar_x+zeroposbaroffset+a,y+height);
@@ -894,12 +897,12 @@ class TDVBarCard extends HTMLElement
           this.ctx.moveTo(chart_x+i+1,y+height-zeroposchartoffset);
           if(entity.h[i].v>0)
            {
-            let a=this._getPos(Math.abs(entity.h[i].mx),height-2-zeroposchartoffset);
+            let a=this._getPos(Math.abs(entity.h[i].mx),height-2-zeroposchartoffset, entity);
             this.ctx.lineTo(chart_x+i+1,(y+(height-zeroposchartoffset)-a));
            } 
           else if(this.allownegativescale)
            {
-            let a=this._getPos(Math.abs(entity.h[i].mn),height-2-zeroposchartoffset);
+            let a=this._getPos(Math.abs(entity.h[i].mn),height-2-zeroposchartoffset, entity);
             this.ctx.lineTo(chart_x+i+1,(y+(height-zeroposchartoffset)+a));
            }
          }
@@ -913,7 +916,7 @@ class TDVBarCard extends HTMLElement
         if(entity.h[i]&&entity.h[i].v)
          {
           this.ctx.moveTo(chart_x+i+1,y+height-zeroposchartoffset);
-          let a=this._getPos(Math.abs(entity.h[i].v),height-2-zeroposchartoffset);
+          let a=this._getPos(Math.abs(entity.h[i].v),height-2-zeroposchartoffset, entity);
           if(entity.h[i].v>0) this.ctx.lineTo(chart_x+i+1,(y+(height-zeroposchartoffset)-a));
           else if(this.allownegativescale) this.ctx.lineTo(chart_x+i+1,(y+(height-zeroposchartoffset)+a));
          }
@@ -1103,7 +1106,7 @@ class TDVBarCard extends HTMLElement
    {
     //debugger
     return {title:"Optional card title",
-            rangemax:2000, 
+            default_max:2000, 
             entities:[{entity:"<enter base entity name>",
                        name:  "Parameter name",
                        icon:  "mdi:power-socket-de",
