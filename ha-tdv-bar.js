@@ -374,15 +374,36 @@ class TDVBarCard extends HTMLElement
        {
         case "min":
          {
-          if(this.allownegativescale&&this.barData[BarIdx].h[HistIdx]?.v<0) data=this.barData[BarIdx].h[HistIdx]?.mx;
+          // If inverted, use the maximum value (and then invert it)
+          if(this.barData[BarIdx].inv)
+          {
+            data=data=this.barData[BarIdx].h[HistIdx]?.mx * -1;
+          }
+          else if(this.allownegativescale&&this.barData[BarIdx].h[HistIdx]?.v<0) data=this.barData[BarIdx].h[HistIdx]?.mx;
           else data=this.barData[BarIdx].h[HistIdx]?.mn;
 
          } break
-        case "avg": data=this.barData[BarIdx].h[HistIdx]?.v;break
+        case "avg": 
+        {
+          if(this.barData[BarIdx].inv)
+          {
+              data=data=this.barData[BarIdx].h[HistIdx]?.v * -1;
+          }
+          else
+          {
+            data=this.barData[BarIdx].h[HistIdx]?.v;
+          }
+          break
+        }
         case "max": 
         default:  
          {
-          if(this.allownegativescale&&this.barData[BarIdx].h[HistIdx]?.v<0) data=this.barData[BarIdx].h[HistIdx]?.mn;
+          // If inverted, use the minimum value (and then invert it)
+          if(this.barData[BarIdx].inv)
+          {
+            data=this.barData[BarIdx].h[HistIdx]?.mn * -1;
+          }
+          else if(this.allownegativescale&&this.barData[BarIdx].h[HistIdx]?.v<0) data=this.barData[BarIdx].h[HistIdx]?.mn;
           else data=this.barData[BarIdx].h[HistIdx]?.mx;
          } break
        } 
