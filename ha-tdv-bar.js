@@ -99,7 +99,12 @@ class TDVBarCard extends HTMLElement
             inv:a[i].invert??false,
             max:a[i].max??this.maxpos_default,
             max_raw:null,
-            e_sec: a[i].secondary??{entity:null,d:0,m:"",pr:a[i].precision??0}
+            e_sec: {
+              entity: a[i].secondary?.entity??null,
+              d: 0,
+              m: "",
+              pr: a[i].secondary?.precision??0
+            }
           };
 
           // Convert range value to log10 scale
