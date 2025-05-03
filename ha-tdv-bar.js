@@ -73,8 +73,9 @@ class TDVBarCard extends HTMLElement
 
        }
 
-      // Range
+      // Default config options
       this.maxpos_default=this.config.default_max>0?this.config.default_max:2000; 
+      this.allownegativescale_default=Number(this.config.allownegativescale_default??0); //0-disable 1-enable
 
       if(this.config.entities)
        {
@@ -99,6 +100,7 @@ class TDVBarCard extends HTMLElement
             inv:a[i].invert??false,
             max:a[i].max??this.maxpos_default,
             max_raw:null,
+            allow_neg:a[i].allownegativescale??this.allownegativescale_default,
             e_sec: {
               entity: a[i].secondary?.entity??null,
               d: 0,
@@ -168,7 +170,7 @@ class TDVBarCard extends HTMLElement
       this.trackingmode=Number(this.config.trackingmode??1);             //0-disable 1-bar only 2-history 3-bar and history 4-all bars and history  
       this.trackingvalue=this.config.trackingvalue??"max";               //min, avg, max
       this.animation=Number(this.config.animation??1);                   //0-disable 1-enable
-      this.allownegativescale=Number(this.config.allownegativescale??0); //0-disable 1-enable
+      // this.allownegativescale=Number(this.config.allownegativescale??0); //0-disable 1-enable
 
       //-------------------------------------------------------------------------------------------
       // Create card content
@@ -411,7 +413,7 @@ class TDVBarCard extends HTMLElement
        {
         case "min":
          {
-          if(this.allownegativescale&&this.barData[BarIdx].h[HistIdx]?.v<0) data=this.barData[BarIdx].h[HistIdx]?.mx;
+          if(this.barData[BarIdx].allow_neg&&this.barData[BarIdx].h[HistIdx]?.v<0) data=this.barData[BarIdx].h[HistIdx]?.mx;
           else data=this.barData[BarIdx].h[HistIdx]?.mn;
 
          } break
@@ -419,7 +421,7 @@ class TDVBarCard extends HTMLElement
         case "max": 
         default:  
          {
-          if(this.allownegativescale&&this.barData[BarIdx].h[HistIdx]?.v<0) data=this.barData[BarIdx].h[HistIdx]?.mn;
+          if(this.barData[BarIdx].allow_neg&&this.barData[BarIdx].h[HistIdx]?.v<0) data=this.barData[BarIdx].h[HistIdx]?.mn;
           else data=this.barData[BarIdx].h[HistIdx]?.mx;
          } break
        } 
@@ -697,7 +699,7 @@ class TDVBarCard extends HTMLElement
     if(entity.d!=0&&/*this._tracker.bar_id!=baridx*/this._tracker.hist_offset==null&&entity.ap!=null)
      {
       let zeroposbaroffset;
-      if(this.allownegativescale) zeroposbaroffset=Math.round((width-bar_x-1)/2); else zeroposbaroffset=0;
+      if(entity.allow_neg) zeroposbaroffset=Math.round((width-bar_x-1)/2); else zeroposbaroffset=0;
 
       let dp=this._getPos(Math.abs(entity.d),(width-bar_x-1)-zeroposbaroffset, entity);
       if(dp>4) 
@@ -708,7 +710,7 @@ class TDVBarCard extends HTMLElement
          {
           bpx=bar_x+zeroposbaroffset+1.5;
          }
-        else if(this.allownegativescale)
+        else if(entity.allow_neg)
          {
           bpx=bar_x+zeroposbaroffset+1.5-dp;
          }
@@ -746,7 +748,7 @@ class TDVBarCard extends HTMLElement
               this.ctx.moveTo(bar_x+a+zeroposbaroffset,y+bar_yoffset+1);
               this.ctx.lineTo(bar_x+a+zeroposbaroffset,y+height);
              }
-            else if(entity.d<0&&this.allownegativescale)
+            else if(entity.d<0&&entity.allow_neg)
              {
               this.ctx.moveTo(bar_x+zeroposbaroffset-a,y+bar_yoffset+1);
               this.ctx.lineTo(bar_x+zeroposbaroffset-a,y+height);
@@ -818,7 +820,7 @@ class TDVBarCard extends HTMLElement
      {
       let curvalstr="";
 
-      if(this.allownegativescale&&trval<0) switch(this.trackingvalue)
+      if(entity.allow_neg&&trval<0) switch(this.trackingvalue)
        {
         case "min": curvalstr="⇑ ";break;
         case "avg": curvalstr="~ ";break;
@@ -849,7 +851,7 @@ class TDVBarCard extends HTMLElement
 
     let zeroposbaroffset;
     let zeroposchartoffset;
-    if(this.allownegativescale) 
+    if(entity.allow_neg) 
      {
       zeroposbaroffset=Math.round((width-bar_x-1)/2);
       zeroposchartoffset=Math.round((height-2)/2);
@@ -866,7 +868,7 @@ class TDVBarCard extends HTMLElement
       this.ctx.fillStyle=entity.bar_fg;//?entity.bar_fg:this.colors.bar_fg;
       this._roundRect(bar_x+.5+zeroposbaroffset,y+bar_yoffset+.5,this._getPos(entity.d,width-bar_x-1-zeroposbaroffset, entity),height-bar_yoffset-.5,3,true,true);
      }
-    else if(entity.d<0&&this.allownegativescale)
+    else if(entity.d<0&&entity.allow_neg)
      {
       this.ctx.fillStyle=entity.bar_fg;//?entity.bar_fg:this.colors.bar_fg;
       let w=this._getPos(Math.abs(entity.d),width-bar_x-1-zeroposbaroffset, entity);
@@ -879,7 +881,7 @@ class TDVBarCard extends HTMLElement
       this.ctx.fillStyle=this.colors.bar_tracker;
       if(this._tracker.data>0) 
         this._roundRect(bar_x+.5+zeroposbaroffset,y+bar_yoffset+.5,this._getPos(this._tracker.data,width-bar_x-1-zeroposbaroffset, entity),height-bar_yoffset-.5,3,true,true);
-      else if(this._tracker.data<0&&this.allownegativescale)
+      else if(this._tracker.data<0&&entity.allow_neg)
        { 
         let tbw=this._getPos(Math.abs(this._tracker.data),width-bar_x-1-zeroposbaroffset, entity);
         this._roundRect(bar_x+.5+zeroposbaroffset-tbw,y+bar_yoffset+.5,tbw,height-bar_yoffset-.5,3,true,true);
@@ -892,7 +894,7 @@ class TDVBarCard extends HTMLElement
        {
         this.ctx.fillStyle=this.colors.bar_tracker;
         if(d>0) this._roundRect(bar_x+.5+zeroposbaroffset,y+bar_yoffset+.5,this._getPos(d,width-bar_x-1-zeroposbaroffset, entity),height-bar_yoffset-.5,3,true,true);
-        else if(d<0&&this.allownegativescale)
+        else if(d<0&&entity.allow_neg)
          {
           let tbw=this._getPos(Math.abs(d),width-bar_x-1-zeroposbaroffset, entity)
           this._roundRect(bar_x+.5+zeroposbaroffset-tbw,y+bar_yoffset+.5,tbw,height-bar_yoffset-.5,3,true,true);
@@ -905,7 +907,7 @@ class TDVBarCard extends HTMLElement
     // Bar grid
     this.ctx.beginPath();
 
-    if(this.allownegativescale)// Draw zero line
+    if(entity.allow_neg)// Draw zero line
      {
       this.ctx.moveTo(bar_x+zeroposbaroffset,y+bar_yoffset+1);
       this.ctx.lineTo(bar_x+zeroposbaroffset,y+height);
@@ -918,7 +920,7 @@ class TDVBarCard extends HTMLElement
       this.ctx.moveTo(bar_x+zeroposbaroffset+a,y+bar_yoffset+1);
       this.ctx.lineTo(bar_x+zeroposbaroffset+a,y+height);
       // Draw negative scale grid 
-      if(this.allownegativescale)
+      if(entity.allow_neg)
        {
         this.ctx.moveTo(bar_x+zeroposbaroffset-a,y+bar_yoffset+1);
         this.ctx.lineTo(bar_x+zeroposbaroffset-a,y+height);
@@ -941,7 +943,7 @@ class TDVBarCard extends HTMLElement
             let a=this._getPos(Math.abs(entity.h[i].mx),height-2-zeroposchartoffset, entity);
             this.ctx.lineTo(chart_x+i+1,(y+(height-zeroposchartoffset)-a));
            } 
-          else if(this.allownegativescale)
+          else if(entity.allow_neg)
            {
             let a=this._getPos(Math.abs(entity.h[i].mn),height-2-zeroposchartoffset, entity);
             this.ctx.lineTo(chart_x+i+1,(y+(height-zeroposchartoffset)+a));
@@ -959,13 +961,13 @@ class TDVBarCard extends HTMLElement
           this.ctx.moveTo(chart_x+i+1,y+height-zeroposchartoffset);
           let a=this._getPos(Math.abs(entity.h[i].v),height-2-zeroposchartoffset, entity);
           if(entity.h[i].v>0) this.ctx.lineTo(chart_x+i+1,(y+(height-zeroposchartoffset)-a));
-          else if(this.allownegativescale) this.ctx.lineTo(chart_x+i+1,(y+(height-zeroposchartoffset)+a));
+          else if(entity.allow_neg) this.ctx.lineTo(chart_x+i+1,(y+(height-zeroposchartoffset)+a));
          }
        }
       this.ctx.stroke();
 
       // Draw zero line
-      if(this.allownegativescale)
+      if(entity.allow_neg)
        {
         this.ctx.strokeStyle=this.colors.bar_frame;
         this.ctx.beginPath();
